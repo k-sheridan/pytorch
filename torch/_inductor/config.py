@@ -1,6 +1,16 @@
 import os  # noqa: C101
 import sys
-from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    TYPE_CHECKING,
+    Union,
+)
 
 import torch
 import torch._inductor.custom_graph_pass
@@ -85,7 +95,7 @@ autotune_remote_cache: Optional[bool] = autotune_remote_cache_default()
 bundled_autotune_remote_cache: Optional[bool] = bundled_autotune_remote_cache_default()
 
 # Force disabled all inductor level caching -- This will override any other caching flag
-force_disable_caches = os.environ.get("TORCHINDUCTOR_FORCE_DISABLE_CACHES") == "1"
+force_disable_caches: bool = os.environ.get("TORCHINDUCTOR_FORCE_DISABLE_CACHES") == "1"
 
 # sleep in inductor for testing
 sleep_sec_TESTING_ONLY: Optional[int] = None
@@ -265,7 +275,15 @@ reorder_for_compute_comm_overlap = False
 # for built-in passes, use string name; for user-defined passes, pass in the function handle
 # WARNING: Inductor scheduler IR is at prototype stage and subject to change,
 # hence custom IR passes built on top of it might break in the future.
-reorder_for_compute_comm_overlap_passes = [
+reorder_for_compute_comm_overlap_passes: List[
+    Union[
+        str,
+        Callable[
+            [List["torch._inductor.scheduler.BaseSchedulerNode"]],
+            List["torch._inductor.scheduler.BaseSchedulerNode"],
+        ],
+    ]
+] = [
     "reorder_compute_for_overlap",
     "sink_waits",
     "raise_comms",
@@ -638,6 +656,7 @@ def decide_compile_threads() -> int:
 compile_threads: Optional[int] = None if is_fbcode() else decide_compile_threads()
 
 # gemm autotuning global cache dir
+global_cache_dir: Optional[str]
 if is_fbcode():
     try:
         from libfb.py import parutil
@@ -728,7 +747,9 @@ profile_bandwidth = _profile_var != ""
 profile_bandwidth_regex = "" if _profile_var == "1" else _profile_var
 # Specify a file where we print out the profiling results.
 # None means we do not dump results to a file.
-profile_bandwidth_output = os.environ.get("TORCHINDUCTOR_PROFILE_OUTPUT", None)
+profile_bandwidth_output: Optional[str] = os.environ.get(
+    "TORCHINDUCTOR_PROFILE_OUTPUT", None
+)
 # Switch to do_bench_using_profiling to exclude the CPU overheads
 profile_bandwidth_with_do_bench_using_profiling = (
     os.environ.get("TORCHINDUCTOR_PROFILE_WITH_DO_BENCH_USING_PROFILING") == "1"
@@ -803,14 +824,9 @@ class cpp:
 
     simdlen: Optional[int] = None
     min_chunk_size = int(os.environ.get("TORCHINDUCTOR_CPP_MIN_CHUNK_SIZE", "4096"))
-    cxx = (
+    cxx: Tuple[None, Literal["g++-12", "g++-11", "g++-10", "clang++", "g++.par"]] = (
         None,  # download gcc12 from conda-forge if conda is installed
-        # "g++-12",
-        # "g++-11",
-        # "g++-10",
-        # "clang++",
         os.environ.get("CXX", "clang++" if sys.platform == "darwin" else "g++"),
-        # "g++.par",
     )
     # Allow kernel performance profiling via PyTorch profiler
     enable_kernel_profile = (
@@ -1296,7 +1312,7 @@ class trace:
     log_autotuning_results: bool = False
 
 
-_save_config_ignore = [
+_save_config_ignore: List[str] = [
     # workaround: "Can't pickle <function ...>"
     "trace.upload_tar",
     "joint_custom_pre_pass",
@@ -1304,7 +1320,7 @@ _save_config_ignore = [
     "pre_grad_custom_pass",
 ]
 
-_cache_config_ignore_prefix = [
+_cache_config_ignore_prefix: List[str] = [
     # trace functions are not relevant to config caching
     "trace",
     # uses absolute path
