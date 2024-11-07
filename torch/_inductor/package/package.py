@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import shlex
+import shutil
 import subprocess
 import zipfile
 from pathlib import Path
@@ -181,8 +182,27 @@ def package_aoti(archive_file: str, aoti_files: Union[str, Dict[str, str]]) -> s
                 aoti_output_dir,
                 model_name,
             )
+            num_so_files = 0
+            num_cpp_files = 0
             for root, dirs, files in os.walk(aoti_output_dir):
                 for file in files:
+                    if file.endswith(".so"):
+                        num_so_files += 1
+                        if num_so_files > 1:
+                            raise RuntimeError(
+                                "Multiple .so files found in AOTInductor output directory "
+                                f"{aoti_output_dir}. You might need to clear your cache "
+                                "directory before calling aoti_compile again."
+                            )
+                    if file.endswith(".cpp"):
+                        num_cpp_files += 1
+                        if num_so_files > 1:
+                            raise RuntimeError(
+                                "Multiple .cpp files found in AOTInductor output directory "
+                                f"{aoti_output_dir}. You might need to clear your cache "
+                                "directory before calling aoti_compile again."
+                            )
+
                     log.debug(
                         "Saving AOTI generated file %s to archive in %s%s/%s",
                         os.path.join(root, file),
@@ -194,6 +214,10 @@ def package_aoti(archive_file: str, aoti_files: Union[str, Dict[str, str]]) -> s
                         f"{AOTINDUCTOR_DIR}{model_name}/{file}",
                         os.path.join(root, file),
                     )
+
+            # Remove the directory so that it no longer gets used for any other model
+            shutil.rmtree(aoti_output_dir)
+
     return archive_file
 
 
