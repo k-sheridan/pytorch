@@ -100,7 +100,17 @@ std::unordered_map<std::string, c10::IValue> TORCH_API
 saveExtraArgs(const at::RecordFunction& fn);
 std::unordered_map<std::string, std::string> TORCH_API
 saveNcclMeta(const at::RecordFunction& fn, bool truncate = true);
-
+int getTensorStartHint(const at::Tensor& t);
+bool checkFunctionOutputsForLogging(
+    const at::RecordFunction& fn,
+    const char* fn_name);
+bool checkFunctionInputsForLogging(
+    const at::RecordFunction& fn,
+    const char* fn_name);
+template <typename T>
+const std::string vectorToString(const std::vector<T>& v);
+std::pair<bool, std::variant<int, std::vector<int>>> findStartAddrForTensors(
+    const c10::IValue& val);
 uint64_t TORCH_API computeFlops(
     const std::string& op_name,
     const std::unordered_map<std::string, c10::IValue>& extra_args);
@@ -111,7 +121,7 @@ template <typename T>
 class TORCH_API GlobalStateManager {
  public:
   static GlobalStateManager& singleton() {
-    static GlobalStateManager singleton_;
+     /* library-local */ static GlobalStateManager singleton_;
     return singleton_;
   }
 
@@ -156,6 +166,20 @@ struct HashCombine {
   }
 };
 
+template <typename T>
+const std::string vectorToString(const std::vector<T>& v) {
+  std::ostringstream oss;
+  oss << "[";
+  for (size_t i = 0; i < v.size(); ++i) {
+    oss << v[i];
+    if (i != v.size() - 1) {
+      oss << ", ";
+    }
+  }
+  oss << "]";
+  return oss.str();
+}
+
 #ifdef USE_DISTRIBUTED
 constexpr auto kCommsName = "Collective name";
 constexpr auto kDtype = "dtype";
@@ -172,6 +196,8 @@ constexpr auto kGroupRanks = "Process Group Ranks";
 constexpr auto kRank = "Rank";
 constexpr auto kP2pSrc = "Src Rank";
 constexpr auto kP2pDst = "Dst Rank";
+constexpr auto kInTensorsStart = "Input Tensors start";
+constexpr auto kOutTensorsStart = "Output Tensors start";
 #endif // USE_DISTRIBUTED
 
 } // namespace torch::profiler::impl
