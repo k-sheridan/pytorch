@@ -133,6 +133,7 @@ class TestDynamoTimed(TestCase):
  '_recursive_post_grad_passes': [0.0, 0.0],
  '_recursive_pre_grad_passes': [0.0],
  'async_compile.wait': [0.0, 0.0],
+ 'backward._backward_impl': [0.0],
  'compile_file': [0.0, 0.0, 0.0, 0.0],
  'compile_fx.<locals>.bw_compiler': [0.0],
  'compile_fx.<locals>.fw_compiler_base': [0.0],
@@ -149,6 +150,7 @@ class TestDynamoTimed(TestCase):
             """\
 {'backend_compile': 0.0,
  'code_gen': 0.0,
+ 'entire_backward_compile': 0.0,
  'entire_frame_compile': 0.0,
  'inductor_compile': 0.0,
  'total_wall_time': 0.0}""",  # noqa: B950
@@ -198,7 +200,7 @@ CompilationMetrics(compile_id='0/0',
                    restart_reasons=set(),
                    dynamo_time_before_restart_s=0.0,
                    has_guarded_code=True,
-                   remote_cache_time_saved_s=0,
+                   remote_cache_time_saved_s=None,
                    structured_logging_overhead_s=0.0,
                    config_suppress_errors=False,
                    config_inline_inbuilt_nn_modules=True,
@@ -219,10 +221,13 @@ CompilationMetrics(compile_id='0/0',
                    runtime_triton_autotune_time_us=None,
                    dynamo_compile_time_before_restart_us=0,
                    cuda_synchronize_time_us=None,
-                   distributed_ephemeral_timeout_us=0,
+                   distributed_ephemeral_timeout_us=None,
                    structured_logging_overhead_us=0,
                    remote_fx_graph_cache_get_time_us=None,
-                   remote_fx_graph_cache_put_time_us=None)""",  # noqa: B950
+                   remote_fx_graph_cache_put_time_us=None,
+                   backward_cumulative_compile_time_us=None,
+                   end_time_us=100,
+                   log_format_version=2)""",  # noqa: B950
         )
 
         # Second event is for the backward
@@ -256,7 +261,7 @@ CompilationMetrics(compile_id='0/0',
                    dynamo_time_before_restart_s=None,
                    has_guarded_code=None,
                    remote_cache_time_saved_s=None,
-                   structured_logging_overhead_s=0.0,
+                   structured_logging_overhead_s=None,
                    config_suppress_errors=None,
                    config_inline_inbuilt_nn_modules=None,
                    specialize_float=None,
@@ -279,7 +284,10 @@ CompilationMetrics(compile_id='0/0',
                    distributed_ephemeral_timeout_us=None,
                    structured_logging_overhead_us=0,
                    remote_fx_graph_cache_get_time_us=None,
-                   remote_fx_graph_cache_put_time_us=None)""",  # noqa: B950
+                   remote_fx_graph_cache_put_time_us=None,
+                   backward_cumulative_compile_time_us=0,
+                   end_time_us=100,
+                   log_format_version=2)""",  # noqa: B950
         )
 
 
