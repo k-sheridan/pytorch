@@ -11310,8 +11310,8 @@ class CommonTemplate:
         # @ operation needs arguments to be the same dtype
         for view_dtype in test_dtypes:
             try:
-                x = rand_strided((2, 2), (2, 1), device=self.device, dtype=dtype_x)
-                y = rand_strided((2, 2), (2, 1), device=self.device, dtype=dtype_y)
+                x = rand_strided((4, 4), (4, 1), device=self.device, dtype=dtype_x)
+                y = rand_strided((4, 4), (4, 1), device=self.device, dtype=dtype_y)
                 x2 = x.clone()
                 fn(x, y, view_dtype, x2)
             except Exception as e:
